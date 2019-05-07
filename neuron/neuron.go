@@ -9,7 +9,7 @@ const (
 	viewRange = 4
 	viewLen   = 1 + viewRange*2
 	lenMomory = viewRange * 2
-	dirWay    = 5
+	dirWay    = 4
 )
 
 type World struct {

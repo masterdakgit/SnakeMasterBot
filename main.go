@@ -45,6 +45,7 @@ func gameBot(name string) {
 		var SnakeBot, SnakeBotLast neuron.Snake
 		var World neuron.World
 		SnakeBot.NeuroNetCreate()
+
 		SnakeBotLast.Body = make([]neuron.Cell, 1)
 
 		for {
@@ -97,10 +98,6 @@ func gameBot(name string) {
 				SnakeBot.NeuroSetIn(&World)
 				m := SnakeBot.NeuroWay(&World)
 				rs := lrud[m : m+1]
-
-				if len(SnakeBot.Body) > 64 {
-					rs = "/"
-				}
 
 				move += rs
 
