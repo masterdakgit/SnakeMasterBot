@@ -2,6 +2,7 @@ package neuron
 
 import (
 	"SnakeMasters/server"
+	"fmt"
 	"neuron/nr"
 )
 
@@ -62,13 +63,11 @@ func (s *Snake) NeuroSetIn(w *World) {
 	y1 := y + viewRange
 
 	dOut := float64(0.01)
-	//str := "  "
 
 	for y := y0; y <= y1; y++ {
 		for x := x0; x <= x1; x++ {
 			if y < 0 || y >= w.LenY || x < 0 || x >= w.LenX {
-				dOut = 0.01 //Выход за край карты
-				//			str = "##"
+				dOut = -0.5 //Выход за край карты
 			} else {
 				dOut, _ = s.dataToOut(w, w.Area[x][y])
 			}
@@ -76,22 +75,13 @@ func (s *Snake) NeuroSetIn(w *World) {
 			dx := x - x0
 			dy := y - y0
 
-			n := dx*viewLen + dy
+			n := dy*viewLen + dx
 			s.neuroNet.Layers[0][n].Out = dOut
-			/*
-				if n == 0 {
-					fmt.Println()
-				}
-				if dx%w.LenX == 0 {
-					fmt.Println()
-				}
-				fmt.Print(str)
-			*/
 		}
 	}
 
-	s.memory.data[s.memory.pos] = s.neuroNet.Layers[0]
-
+	copy(s.memory.data[s.memory.pos], s.neuroNet.Layers[0])
+	printData(s.neuroNet.Layers[0])
 }
 
 func (s *Snake) NeuroWay(w *World) int {
@@ -113,7 +103,7 @@ func (s *Snake) NeuroCorrect(w *World, a float64) {
 
 		s.neuroNet.NCorrect = 0.1 + 0.4*n/lenMomory
 		n--
-		s.neuroNet.Layers[0] = s.memory.data[p]
+		copy(s.neuroNet.Layers[0], s.memory.data[p])
 		s.neuroNet.Calc()
 
 		for n := 0; n < dirWay; n++ {
@@ -139,11 +129,32 @@ func (s *Snake) dataToOut(w *World, data int) (d float64, str string) {
 	case server.ElEat:
 		return 0.99, "* "
 	case server.ElHead:
-		return -0.5, "@ "
+		return -0.6, "@ "
 	case server.ElBody:
-		return -0.5, "o "
+		return -0.55, "o "
 	}
 
 	panic("dataToOut: Пустое значение.")
 	return 0, "  " //
+}
+
+func printData(layer []nr.Neuron) {
+	fmt.Println()
+	for n := range layer {
+		if n%viewLen == 0 {
+			fmt.Println()
+		}
+		switch layer[n].Out {
+		case -0.5:
+			fmt.Print("# ")
+		case 0.01:
+			fmt.Print(". ")
+		case 0.99:
+			fmt.Print("* ")
+		case -0.6:
+			fmt.Print("@ ")
+		case -0.55:
+			fmt.Print("o ")
+		}
+	}
 }

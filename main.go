@@ -31,7 +31,7 @@ type respData struct {
 
 func main() {
 	rand.Seed(time.Now().UnixNano())
-	for n := 0; n < 3; n++ {
+	for n := 0; n < 1; n++ {
 		gameBot("masterdak" + strconv.Itoa(n) + "r" + strconv.Itoa(rand.Intn(100)))
 	}
 	fmt.Scanln()
@@ -80,14 +80,8 @@ func gameBot(name string) {
 				}
 
 				if standing {
-					if SnakeBot.Standing > 4 {
-						fmt.Println(name, "standing")
-						SnakeBot.Standing = 0
-					}
 					SnakeBot.NeuroCorrect(&World, 0.1)
-					SnakeBot.Standing++
 				} else {
-					SnakeBot.Standing = 0
 					if len(SnakeBot.Body) > len(SnakeBotLast.Body) {
 						SnakeBot.NeuroCorrect(&World, 0.99)
 					} else {
