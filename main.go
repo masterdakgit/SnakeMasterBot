@@ -12,7 +12,7 @@ import (
 
 const (
 	host = "http://84.201.140.232:8080"
-	lrud = "_lrud/"
+	lrud = "lrud"
 )
 
 type respData struct {
@@ -31,7 +31,7 @@ type respData struct {
 
 func main() {
 	rand.Seed(time.Now().UnixNano())
-	for n := 0; n < 3; n++ {
+	for n := 0; n < 10; n++ {
 		gameBot("masterdak" + strconv.Itoa(n) + "r" + strconv.Itoa(rand.Intn(100)))
 	}
 	fmt.Scanln()
@@ -42,11 +42,14 @@ func gameBot(name string) {
 		time.Sleep(200 * time.Millisecond)
 
 		var data respData = respData{}
-		var SnakeBot, SnakeBotLast neuron.Snake
+		var SnakeBot neuron.Snake
+		var SnakeBotLast [100]neuron.Snake
 		var World neuron.World
 		SnakeBot.NeuroNetCreate()
 
-		SnakeBotLast.Body = make([]neuron.Cell, 1)
+		for n := 0; n < 100; n++ {
+			SnakeBotLast[n].Body = make([]neuron.Cell, 1)
+		}
 
 		for {
 
@@ -70,33 +73,39 @@ func gameBot(name string) {
 				SnakeBot.Body = data.Data.Snakes[n].Body
 				SnakeBot.Energe = data.Data.Snakes[n].Energe
 
-				if SnakeBot.Energe == SnakeBotLast.Energe {
+				if SnakeBot.Energe == SnakeBotLast[n].Energe {
 					continue
 				}
 
 				standing := false
-				if SnakeBot.Body[0] == SnakeBotLast.Body[0] {
+				if SnakeBot.Body[0] == SnakeBotLast[n].Body[0] {
 					standing = true
 				}
 
 				if standing {
 					SnakeBot.NeuroCorrect(&World, 0.1)
+				} else if len(SnakeBot.Body) > len(SnakeBotLast[n].Body) {
+					SnakeBot.NeuroCorrect(&World, 0.99)
+				} else if len(SnakeBot.Body) < len(SnakeBotLast[n].Body) {
+					SnakeBot.NeuroCorrect(&World, 0.2)
+				} else if data.Data.Snakes[n].Energe == 1 && len(SnakeBot.Body) == 1 {
+					SnakeBot.NeuroCorrect(&World, 0.01)
 				} else {
-					if len(SnakeBot.Body) > len(SnakeBotLast.Body) {
-						SnakeBot.NeuroCorrect(&World, 0.99)
-					} else {
-						SnakeBot.NeuroCorrect(&World, 0.5)
-					}
+					SnakeBot.NeuroCorrect(&World, 0.5)
 				}
 
 				SnakeBot.NeuroSetIn(&World)
 				m := SnakeBot.NeuroWay(&World)
 				rs := lrud[m : m+1]
 
+				if len(SnakeBot.Body) > 8 {
+					rs = "/"
+				}
+
 				move += rs
 
-				SnakeBotLast.Energe = SnakeBot.Energe
-				copy(SnakeBotLast.Body, SnakeBot.Body)
+				SnakeBotLast[n].Energe = SnakeBot.Energe
+				copy(SnakeBotLast[n].Body, SnakeBot.Body)
 			}
 
 			resp.Body.Close()
