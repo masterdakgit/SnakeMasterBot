@@ -3,6 +3,7 @@ package neuron
 import (
 	"SnakeMasters/server"
 	"fmt"
+	"math"
 	"neuron/nr"
 )
 
@@ -10,7 +11,7 @@ const (
 	viewRange = 4
 	viewLen   = 1 + viewRange*2
 	lenMomory = viewRange * 2
-	dirWay    = 4
+	dirWay    = 5
 )
 
 type World struct {
@@ -25,7 +26,7 @@ type Snake struct {
 	Standing int
 	nCorrect float64
 	memory   memory
-	neuroNet nr.NeuroNet
+	NeuroNet nr.NeuroNet
 }
 
 type Cell struct {
@@ -51,7 +52,7 @@ func (s *Snake) NeuroNetCreate() {
 		s.memory.data[n] = make([]nr.Neuron, viewLen*viewLen)
 	}
 
-	s.neuroNet.CreateLayer(neuroLayer)
+	s.NeuroNet.CreateLayer(neuroLayer)
 }
 
 func (s *Snake) NeuroSetIn(w *World) {
@@ -76,17 +77,17 @@ func (s *Snake) NeuroSetIn(w *World) {
 			dy := y - y0
 
 			n := dy*viewLen + dx
-			s.neuroNet.Layers[0][n].Out = dOut
+			s.NeuroNet.Layers[0][n].Out = dOut
 		}
 	}
 
-	copy(s.memory.data[s.memory.pos], s.neuroNet.Layers[0])
+	copy(s.memory.data[s.memory.pos], s.NeuroNet.Layers[0])
 }
 
 func (s *Snake) NeuroWay(w *World) int {
 	s.NeuroSetIn(w)
-	s.neuroNet.Calc()
-	mo := s.neuroNet.MaxOutputNumber(0)
+	s.NeuroNet.Calc()
+	mo := s.NeuroNet.MaxOutputNumber(0)
 	s.memory.way[s.memory.pos] = mo
 	s.memory.pos = (s.memory.pos + 1) % lenMomory
 	return mo
@@ -94,29 +95,28 @@ func (s *Snake) NeuroWay(w *World) int {
 
 func (s *Snake) NeuroCorrect(w *World, a float64) {
 	ans := make([]float64, dirWay)
-	n := float64(lenMomory)
 	way := 0
 
-	//fmt.Println("----")
+	pow := float64(0)
 	for pos := s.memory.pos + lenMomory - 1; pos >= s.memory.pos; pos-- {
 		p := pos % lenMomory
 
-		s.neuroNet.NCorrect = 0.05 + 0.25*n/lenMomory
-		n--
-		s.neuroNet.Layers[0] = s.memory.data[p]
-		s.neuroNet.Calc()
+		s.NeuroNet.NCorrect = 0.5 / math.Pow(2, pow)
+		pow++
+
+		s.NeuroNet.Layers[0] = s.memory.data[p]
+		s.NeuroNet.Calc()
 
 		for n := 0; n < dirWay; n++ {
-			ans[n] = s.neuroNet.Layers[len(s.neuroNet.Layers)-1][n].Out
+			ans[n] = s.NeuroNet.Layers[len(s.NeuroNet.Layers)-1][n].Out
 		}
 
 		way = s.memory.way[p]
-		//fmt.Println(way, s.neuroNet.MaxOutputNumber(0))
 
 		ans[way] = a
 
-		s.neuroNet.SetAnswers(ans)
-		s.neuroNet.Correct()
+		s.NeuroNet.SetAnswers(ans)
+		s.NeuroNet.Correct()
 	}
 }
 
