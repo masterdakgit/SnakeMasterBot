@@ -12,7 +12,7 @@ import (
 
 const (
 	host = "http://84.201.140.232:8080"
-	lrud = "lrud/"
+	lrud = "_lrud/"
 )
 
 type respData struct {
@@ -31,7 +31,7 @@ type respData struct {
 
 func main() {
 	rand.Seed(time.Now().UnixNano())
-	for n := 0; n < 1; n++ {
+	for n := 0; n < 3; n++ {
 		gameBot("masterdak" + strconv.Itoa(n) + "r" + strconv.Itoa(rand.Intn(100)))
 	}
 	fmt.Scanln()

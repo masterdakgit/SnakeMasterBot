@@ -10,7 +10,7 @@ const (
 	viewRange = 4
 	viewLen   = 1 + viewRange*2
 	lenMomory = viewRange * 2
-	dirWay    = 4
+	dirWay    = 5
 )
 
 type World struct {
@@ -81,7 +81,6 @@ func (s *Snake) NeuroSetIn(w *World) {
 	}
 
 	copy(s.memory.data[s.memory.pos], s.neuroNet.Layers[0])
-	printData(s.neuroNet.Layers[0])
 }
 
 func (s *Snake) NeuroWay(w *World) int {
@@ -102,22 +101,24 @@ func (s *Snake) NeuroCorrect(w *World, a float64) {
 		p := pos % lenMomory
 
 		s.neuroNet.NCorrect = 0.1 + 0.4*n/lenMomory
+		//fmt.Println(n)
 		n--
 		copy(s.neuroNet.Layers[0], s.memory.data[p])
+		//printData(s.neuroNet.Layers[0])
 		s.neuroNet.Calc()
 
 		for n := 0; n < dirWay; n++ {
 			ans[n] = s.neuroNet.Layers[len(s.neuroNet.Layers)-1][n].Out
 		}
 
-		way = s.neuroNet.MaxOutputNumber(0)
+		way = s.memory.way[p]
+		//fmt.Println(way)
 
 		ans[way] = a
 
 		s.neuroNet.SetAnswers(ans)
 		s.neuroNet.Correct()
 	}
-
 }
 
 func (s *Snake) dataToOut(w *World, data int) (d float64, str string) {
