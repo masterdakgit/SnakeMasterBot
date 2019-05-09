@@ -4,7 +4,7 @@ import (
 	"SnakeMasterBot/neuron"
 	"encoding/json"
 	"fmt"
-	"io"
+	"log"
 	"math/rand"
 	"net/http"
 	"strconv"
@@ -32,8 +32,8 @@ type respData struct {
 
 func main() {
 	rand.Seed(time.Now().UnixNano())
-	for n := 0; n < 10; n++ {
-		gameBot("masterdak" + strconv.Itoa(n) + "r" + strconv.Itoa(rand.Intn(100)))
+	for n := 0; n < 5; n++ {
+		gameBot("BotN" + strconv.Itoa(n) + "r" + strconv.Itoa(rand.Intn(100)))
 	}
 	fmt.Scanln()
 }
@@ -43,10 +43,10 @@ func gameBot(name string) {
 		time.Sleep(200 * time.Millisecond)
 
 		var data respData = respData{}
-		var SnakeBot, SnakeBotLast [200]neuron.Snake
+		var SnakeBot, SnakeBotLast [300]neuron.Snake
 		var World neuron.World
 
-		for n := 0; n < 200; n++ {
+		for n := 0; n < 300; n++ {
 			SnakeBotLast[n].Body = make([]neuron.Cell, 1)
 			SnakeBot[n].NeuroNetCreate()
 			SnakeBot[n].NeuroNet = SnakeBot[0].NeuroNet
@@ -54,10 +54,19 @@ func gameBot(name string) {
 
 		for {
 
+			for resp.Body == nil {
+				time.Sleep(50 * time.Millisecond)
+				var err error
+				resp, err = http.Get(host + "/game/?user=" + name + "&session=" + session)
+				if err != nil {
+					log.Println(err)
+				}
+			}
+
 			decoder := json.NewDecoder(resp.Body)
 			err := decoder.Decode(&data)
 			if err != nil {
-				panic(err)
+				log.Println(err)
 			}
 
 			move := ""
@@ -117,8 +126,8 @@ func gameBot(name string) {
 			resp.Body.Close()
 
 			resp, err = http.Get(host + "/game/?user=" + name + "&session=" + session + "&move=" + move)
-			if err != nil && err != io.EOF {
-				panic(err)
+			if err != nil {
+				log.Println(err)
 			}
 
 			time.Sleep(50 * time.Millisecond)
@@ -130,14 +139,14 @@ func autorizations(name string) (resp *http.Response, s string) {
 	time.Sleep(1 * time.Second)
 	resp, err := http.Get(host + "/game/?user=" + name)
 	if err != nil {
-		panic(err)
+		log.Println(err)
 	}
 
 	var data respData = respData{}
 	decoder := json.NewDecoder(resp.Body)
 	err = decoder.Decode(&data)
 	if err != nil {
-		panic(err)
+		log.Println(err)
 	}
 
 	fmt.Println(data.Answer)
@@ -146,7 +155,7 @@ func autorizations(name string) (resp *http.Response, s string) {
 
 	resp, err = http.Get(host + "/game/?user=" + name + "&session=" + s)
 	if err != nil {
-		panic(err)
+		log.Println(err)
 	}
 	return
 }
